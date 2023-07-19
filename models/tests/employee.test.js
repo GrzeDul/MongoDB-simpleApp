@@ -3,72 +3,48 @@ const expect = require('chai').expect;
 const mongoose = require('mongoose');
 
 describe('Employee', () => {
-  it('should throw an error if no "firstName" arg', () => {
-    const emp = new Employee({ lastName: 'Doe', department: 'IT' });
+  it('should throw an error if there is no arg', () => {
+    const cases = [
+      { arg: 'firstName', obj: { lastName: 'Doe', department: 'IT' } },
+      { arg: 'lastName', obj: { firstName: 'John', department: 'IT' } },
+      { arg: 'department', obj: { firstName: 'John', lastName: 'Doe' } },
+    ];
 
-    emp.validate((err) => {
-      expect(err.errors.firstName).to.exist;
-    });
-  });
-
-  it('should throw an error if no "lastName" arg', () => {
-    const emp = new Employee({ firstName: 'John', department: 'IT' });
-
-    emp.validate((err) => {
-      expect(err.errors.lastName).to.exist;
-    });
-  });
-
-  it('should throw an error if no "department" arg', () => {
-    const emp = new Employee({ firstName: 'John', lastName: 'Doe' });
-
-    emp.validate((err) => {
-      expect(err.errors.department).to.exist;
-    });
-  });
-
-  it('should throw an error if "firstName" is not a string', () => {
-    const cases = [{}, []];
-    for (let firstName of cases) {
-      const emp = new Employee({
-        firstName,
-        lastName: 'Doe',
-        department: 'IT',
-      });
+    for (let empCase of cases) {
+      const emp = new Employee(empCase.obj);
 
       emp.validate((err) => {
-        expect(err.errors.firstName).to.exist;
+        expect(err.errors[empCase.arg]).to.exist;
       });
     }
   });
 
-  it('should throw an error if "lastName" is not a string', () => {
-    const cases = [{}, []];
-    for (let lastName of cases) {
-      const emp = new Employee({
-        firstName: 'John',
-        lastName,
-        department: 'IT',
-      });
+  it('should throw an error if arg is not a string', () => {
+    const cases = [
+      { arg: 'firstName', obj: { lastName: 'Doe', department: 'IT' } },
+      { arg: 'lastName', obj: { firstName: 'John', department: 'IT' } },
+      { arg: 'department', obj: { firstName: 'John', lastName: 'Doe' } },
+    ];
 
-      emp.validate((err) => {
-        expect(err.errors.lastName).to.exist;
-      });
-    }
-  });
+    const wrongArgs = [{}, []];
 
-  it('should throw an error if "department" is not a string', () => {
-    const cases = [{}, []];
-    for (let department of cases) {
-      const emp = new Employee({
-        firstName: 'John',
-        lastName: 'Doe',
-        department,
-      });
+    for (let empCase of cases) {
+      for (let wrongArg of wrongArgs) {
+        const {
+          firstName = wrongArg,
+          lastName = wrongArg,
+          department = wrongArg,
+        } = empCase.obj;
+        const emp = new Employee({
+          firstName,
+          lastName,
+          department,
+        });
 
-      emp.validate((err) => {
-        expect(err.errors.department).to.exist;
-      });
+        emp.validate((err) => {
+          expect(err.errors[empCase.arg]).to.exist;
+        });
+      }
     }
   });
 
@@ -85,8 +61,4 @@ describe('Employee', () => {
       });
     }
   });
-});
-
-after(() => {
-  mongoose.models = {};
 });
